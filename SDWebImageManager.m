@@ -23,6 +23,7 @@ static SDWebImageManager *instance;
         cacheDelegates = [[NSMutableArray alloc] init];
         downloaderForURL = [[NSMutableDictionary alloc] init];
         failedURLs = [[NSMutableArray alloc] init];
+        urls       = [[NSMutableArray alloc] init];
     }
     return self;
 }
@@ -34,6 +35,7 @@ static SDWebImageManager *instance;
     [cacheDelegates release], cacheDelegates = nil;
     [downloaderForURL release], downloaderForURL = nil;
     [failedURLs release], failedURLs = nil;
+    [urls release], urls = nil;
     [super dealloc];
 }
 
@@ -75,6 +77,10 @@ static SDWebImageManager *instance;
 
     // Check the on-disk cache async so we don't block the main thread
     [cacheDelegates addObject:delegate];
+
+    // Remember the actual url that associate with the cache delegate, we will needed to check when disk operation finished, it's the correct URL
+    [urls addObject:url];
+
     NSDictionary *info = [NSDictionary dictionaryWithObjectsAndKeys:delegate, @"delegate", url, @"url", [NSNumber numberWithBool:lowPriority], @"low_priority", nil];
     [[SDImageCache sharedImageCache] queryDiskCacheForKey:[url absoluteString] delegate:self userInfo:info];
 }
@@ -83,9 +89,17 @@ static SDWebImageManager *instance;
 {
     // Remove all instances of delegate from cacheDelegates.
     // (removeObjectIdenticalTo: does this, despite its singular name.)
-    [cacheDelegates removeObjectIdenticalTo:delegate];
+    // But we don't use removeObjectIdenticalTo here because we also want to
+    // remove the associated url with this delegate.
 
     NSUInteger idx;
+
+    while ((idx = [cacheDelegates indexOfObjectIdenticalTo:delegate]) != NSNotFound)
+    {
+        [cacheDelegates removeObjectAtIndex:idx];
+        [urls removeObjectAtIndex:idx];
+    }
+
     while ((idx = [downloadDelegates indexOfObjectIdenticalTo:delegate]) != NSNotFound)
     {
         SDWebImageDownloader *downloader = [[downloaders objectAtIndex:idx] retain];
@@ -117,6 +131,12 @@ static SDWebImageManager *instance;
         return;
     }
 
+    // The disk query returned, but sometimes it was an older request for this delegate which is supposed to be cancelled.
+    // We compare the URL and the key and see if it was the actual request.
+    if ( ! [[[urls objectAtIndex:idx] absoluteString] isEqualToString:key]) {
+        return;
+    }
+
     if ([delegate respondsToSelector:@selector(webImageManager:didFinishWithImage:)])
     {
         [delegate performSelector:@selector(webImageManager:didFinishWithImage:) withObject:self withObject:image];
@@ -126,6 +146,7 @@ static SDWebImageManager *instance;
     // not all of them (as |removeObjectIdenticalTo:| would)
     // in case multiple requests are issued.
     [cacheDelegates removeObjectAtIndex:idx];
+    [urls removeObjectAtIndex:idx];
 }
 
 - (void)imageCache:(SDImageCache *)imageCache didNotFindImageForKey:(NSString *)key userInfo:(NSDictionary *)info
@@ -142,6 +163,7 @@ static SDWebImageManager *instance;
     }
 
     [cacheDelegates removeObjectAtIndex:idx];
+    [urls removeObjectAtIndex:idx];
 
     // Share the same downloader for identical URLs so we don't download the same URL several times
     SDWebImageDownloader *downloader = [downloaderForURL objectForKey:url];
