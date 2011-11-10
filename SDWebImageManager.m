@@ -10,6 +10,9 @@
 #import "SDImageCache.h"
 #import "SDWebImageDownloader.h"
 
+NSString *const SDWebImageManagerProgressDidUpdateNotification = @"SDWebImageManagerProgressDidUpdateNotification";
+NSString *const SDWebImageManagerProgressNotificationInfoProgressKey = @"progress";
+
 static SDWebImageManager *instance;
 
 @implementation SDWebImageManager
@@ -127,6 +130,14 @@ static SDWebImageManager *instance;
 
 #pragma mark SDImageCacheDelegate
 
+- (void)reportProgressForDelegate:(id <SDWebImageManagerDelegate>)delegate progress:(CGFloat)progress {
+    [[NSNotificationCenter defaultCenter] postNotificationName:SDWebImageManagerProgressDidUpdateNotification
+                                                        object:delegate
+                                                      userInfo:[NSDictionary dictionaryWithObjectsAndKeys:
+                                                                [NSNumber numberWithFloat:progress], SDWebImageManagerProgressNotificationInfoProgressKey,
+                                                                nil]];
+}
+
 - (void)imageCache:(SDImageCache *)imageCache didFindImage:(UIImage *)image forKey:(NSString *)key userInfo:(NSDictionary *)info
 {
     id<SDWebImageManagerDelegate> delegate = [info objectForKey:@"delegate"];
@@ -137,6 +148,8 @@ static SDWebImageManager *instance;
         // Request has since been canceled
         return;
     }
+
+    [self reportProgressForDelegate:delegate progress:1];
 
     if ([delegate respondsToSelector:@selector(webImageManager:didFinishWithImage:)])
     {
@@ -169,6 +182,8 @@ static SDWebImageManager *instance;
 
     if (!downloader)
     {
+        [self reportProgressForDelegate:delegate progress:0];
+
         downloader = [SDWebImageDownloader downloaderWithURL:url delegate:self userInfo:info lowPriority:(options & SDWebImageLowPriority)];
         [downloaderForURL setObject:downloader forKey:url];
     }
@@ -177,6 +192,8 @@ static SDWebImageManager *instance;
         // Reuse shared downloader
         downloader.userInfo = info;
         downloader.lowPriority = (options & SDWebImageLowPriority);
+        
+        [self reportProgressForDelegate:delegate progress:(downloader.totalReceivedLength / downloader.expectedContentLength)];
     }
 
     [downloadDelegates addObject:delegate];
@@ -185,8 +202,22 @@ static SDWebImageManager *instance;
 
 #pragma mark SDWebImageDownloaderDelegate
 
-- (void)imageDownloader:(SDWebImageDownloader *)downloader didFinishWithImage:(UIImage *)image
-{
+
+- (void)imageDownloaderDidReceiveData:(SDWebImageDownloader *)downloader {
+    // Notify all the delegates with this downloader
+    for (NSInteger idx = [downloaders count] - 1; idx >= 0; idx--)
+    {
+        SDWebImageDownloader *aDownloader = [downloaders objectAtIndex:idx];
+        if (aDownloader == downloader)
+        {
+            id<SDWebImageManagerDelegate> delegate = [downloadDelegates objectAtIndex:idx];
+
+            [self reportProgressForDelegate:delegate progress:(downloader.totalReceivedLength / downloader.expectedContentLength)];
+        }
+    }
+}
+
+- (void)imageDownloader:(SDWebImageDownloader *)downloader didFinishWithImage:(UIImage *)image {
     [downloader retain];
     SDWebImageOptions options = [[downloader.userInfo objectForKey:@"options"] intValue];
 

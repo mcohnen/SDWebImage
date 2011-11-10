@@ -23,6 +23,7 @@ NSString *const SDWebImageDownloadStopNotification = @"SDWebImageDownloadStopNot
 
 @implementation SDWebImageDownloader
 @synthesize url, delegate, connection, imageData, userInfo, lowPriority;
+@synthesize expectedContentLength, totalReceivedLength;
 
 #pragma mark Public Methods
 
@@ -108,7 +109,12 @@ NSString *const SDWebImageDownloadStopNotification = @"SDWebImageDownloadStopNot
 
 - (void)connection:(NSURLConnection *)aConnection didReceiveData:(NSData *)data
 {
-    [imageData appendData:data];
+	[imageData appendData:data];
+	self.totalReceivedLength += [data length];
+	if ([delegate respondsToSelector:@selector(imageDownloaderDidReceiveData:)])
+    {
+        [delegate performSelector:@selector(imageDownloaderDidReceiveData:) withObject:self];
+    }
 }
 
 #pragma GCC diagnostic ignored "-Wundeclared-selector"
@@ -147,6 +153,10 @@ NSString *const SDWebImageDownloadStopNotification = @"SDWebImageDownloadStopNot
 
     self.connection = nil;
     self.imageData = nil;
+}
+
+- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
+	self.expectedContentLength = [response expectedContentLength];
 }
 
 #pragma mark SDWebImageDecoderDelegate

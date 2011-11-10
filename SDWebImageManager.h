@@ -11,6 +11,9 @@
 #import "SDWebImageManagerDelegate.h"
 #import "SDImageCacheDelegate.h"
 
+extern NSString *const SDWebImageManagerProgressDidUpdateNotification;
+extern NSString *const SDWebImageManagerProgressNotificationInfoProgressKey;
+
 typedef enum
 {
     SDWebImageRetryFailed = 1 << 0,
