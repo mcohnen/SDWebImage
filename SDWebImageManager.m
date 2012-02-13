@@ -140,6 +140,16 @@ static SDWebImageManager *instance;
                                                                 nil]];
 }
 
+- (UIImage *)adjustImageForScreenScale:(UIImage *)image options:(SDWebImageOptions)options {
+    if (options & SDWebImageScreenScale) {
+        float scale = [UIScreen mainScreen].scale;
+        if (scale != 1) {
+            return [UIImage imageWithCGImage:image.CGImage scale:scale orientation:image.imageOrientation];
+        } 
+    }
+    return image;
+}
+
 - (void)imageCache:(SDImageCache *)imageCache didFindImage:(UIImage *)image forKey:(NSString *)key userInfo:(NSDictionary *)info
 {
     id<SDWebImageManagerDelegate> delegate = [info objectForKey:@"delegate"];
@@ -154,7 +164,7 @@ static SDWebImageManager *instance;
     [self reportProgressForDelegate:delegate progress:1];
 
     NSMutableDictionary *mutInfo = [NSMutableDictionary dictionaryWithDictionary:info];
-    [mutInfo setObject:image forKey:@"image"];
+    [mutInfo setObject:[self adjustImageForScreenScale:image options:[[info objectForKey:@"options"] intValue]] forKey:@"image"];
 
     if ([delegate respondsToSelector:@selector(webImageManager:didFinishWithInfo:)])
     {
@@ -242,7 +252,7 @@ static SDWebImageManager *instance;
             if (image)
             {
                 NSDictionary *info = [NSDictionary dictionaryWithObjectsAndKeys:
-                                      image, @"image",
+                                      [self adjustImageForScreenScale:image options:options], @"image",
                                       SDWebImageLoadInfoWeb, SDWebImageKeyLoadInfo,
                                       nil];
                 if ([delegate respondsToSelector:@selector(webImageManager:didFinishWithInfo:)])
