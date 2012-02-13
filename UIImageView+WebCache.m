@@ -45,4 +45,9 @@
     self.image = image;
 }
 
+- (void)webImageManager:(SDWebImageManager *)imageManager didFinishWithInfo:(NSDictionary *)info
+{
+    self.image = [info objectForKey:@"image"];
+}
+
 @end

@@ -8,6 +8,7 @@
 
 #import "SDImageCache.h"
 #import "SDWebImageDecoder.h"
+#import "SDWebImageLoadInfo.h"
 #import <CommonCrypto/CommonDigest.h>
 
 #ifdef ENABLE_SDWEBIMAGE_DECODER
@@ -145,11 +146,17 @@ static SDImageCache *instance;
     [fileManager release];
 }
 
+- (NSDictionary *)addLoadInfo:(NSString *)loadInfo userInfo:(NSDictionary *)info {
+    NSMutableDictionary *ret = [NSMutableDictionary dictionaryWithDictionary:info];
+    [ret setObject:loadInfo forKey:SDWebImageKeyLoadInfo];
+    return ret;
+}
+
 - (void)notifyDelegate:(NSDictionary *)arguments
 {
     NSString *key = [arguments objectForKey:@"key"];
     id <SDImageCacheDelegate> delegate = [arguments objectForKey:@"delegate"];
-    NSDictionary *info = [arguments objectForKey:@"userInfo"];
+    NSDictionary *info = [self addLoadInfo:SDWebImageLoadInfoDisk userInfo:[arguments objectForKey:@"userInfo"]] ;
     UIImage *image = [arguments objectForKey:@"image"];
 
     if (image)
@@ -280,7 +287,7 @@ static SDImageCache *instance;
         // ...notify delegate immediately, no need to go async
         if ([delegate respondsToSelector:@selector(imageCache:didFindImage:forKey:userInfo:)])
         {
-            [delegate imageCache:self didFindImage:image forKey:key userInfo:info];
+            [delegate imageCache:self didFindImage:image forKey:key userInfo:[self addLoadInfo:SDWebImageLoadInfoMem userInfo:info]];
         }
         return;
     }

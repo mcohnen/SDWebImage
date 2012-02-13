@@ -9,9 +9,11 @@
 #import "SDWebImageManager.h"
 #import "SDImageCache.h"
 #import "SDWebImageDownloader.h"
+#import "SDWebImageLoadInfo.h"
 
 NSString *const SDWebImageManagerProgressDidUpdateNotification = @"SDWebImageManagerProgressDidUpdateNotification";
 NSString *const SDWebImageManagerProgressNotificationInfoProgressKey = @"progress";
+
 
 static SDWebImageManager *instance;
 
@@ -151,7 +153,14 @@ static SDWebImageManager *instance;
 
     [self reportProgressForDelegate:delegate progress:1];
 
-    if ([delegate respondsToSelector:@selector(webImageManager:didFinishWithImage:)])
+    NSMutableDictionary *mutInfo = [NSMutableDictionary dictionaryWithDictionary:info];
+    [mutInfo setObject:image forKey:@"image"];
+
+    if ([delegate respondsToSelector:@selector(webImageManager:didFinishWithInfo:)])
+    {
+        [delegate performSelector:@selector(webImageManager:didFinishWithInfo:) withObject:self withObject:mutInfo];
+    } 
+    else if ([delegate respondsToSelector:@selector(webImageManager:didFinishWithImage:)])
     {
         [delegate performSelector:@selector(webImageManager:didFinishWithImage:) withObject:self withObject:image];
     }
@@ -232,7 +241,15 @@ static SDWebImageManager *instance;
 
             if (image)
             {
-                if ([delegate respondsToSelector:@selector(webImageManager:didFinishWithImage:)])
+                NSDictionary *info = [NSDictionary dictionaryWithObjectsAndKeys:
+                                      image, @"image",
+                                      SDWebImageLoadInfoWeb, SDWebImageKeyLoadInfo,
+                                      nil];
+                if ([delegate respondsToSelector:@selector(webImageManager:didFinishWithInfo:)])
+                {
+                    [delegate performSelector:@selector(webImageManager:didFinishWithInfo:) withObject:self withObject:info];
+                } 
+                else if ([delegate respondsToSelector:@selector(webImageManager:didFinishWithImage:)])
                 {
                     [delegate performSelector:@selector(webImageManager:didFinishWithImage:) withObject:self withObject:image];
                 }

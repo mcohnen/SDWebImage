@@ -14,5 +14,7 @@
 
 - (void)webImageManager:(SDWebImageManager *)imageManager didFinishWithImage:(UIImage *)image;
 - (void)webImageManager:(SDWebImageManager *)imageManager didFailWithError:(NSError *)error;
+- (void)webImageManager:(SDWebImageManager *)imageManager didFinishWithInfo:(NSDictionary *)info;
+- (void)webImageManager:(SDWebImageManager *)imageManager didFailWithInfo:(NSDictionary *)info;
 
 @end
