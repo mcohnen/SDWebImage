@@ -186,6 +186,11 @@ static SDWebImageManager *instance;
     NSURL *url = [info objectForKey:@"url"];
     id<SDWebImageManagerDelegate> delegate = [info objectForKey:@"delegate"];
     SDWebImageOptions options = [[info objectForKey:@"options"] intValue];
+    
+    // Notify delegate that we are about to download from web
+    if ([delegate respondsToSelector:@selector(webImageManagerWillStartDownload:)]) {
+        [delegate performSelector:@selector(webImageManagerWillStartDownload:) withObject:self];
+    }
 
     NSUInteger idx = [cacheDelegates indexOfObjectIdenticalTo:delegate];
     if (idx == NSNotFound)
