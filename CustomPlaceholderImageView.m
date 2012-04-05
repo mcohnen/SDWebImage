@@ -39,9 +39,18 @@
     }
 }
 
+- (void)webImageManager:(SDWebImageManager *)imageManager didFailWithError:(NSError *)error {
+    _customPlaceholder.hidden = YES;
+}
+
 - (void)webImageManagerWillStartDownload:(SDWebImageManager *)imageManager {
     _customPlaceholder.hidden = NO;
     _customPlaceholder.alpha = 1;
+}
+
+- (void)layoutSubviews {
+    [super layoutSubviews];
+    _customPlaceholder.size = self.size;
 }
 
 @end
