@@ -18,5 +18,6 @@
 - (void)webImageManager:(SDWebImageManager *)imageManager didFailWithInfo:(NSDictionary *)info;
 
 - (void)webImageManagerWillStartDownload:(SDWebImageManager *)imageManager;
+- (void)webImageManagerWillLoadFromDisk:(SDWebImageManager *)imageManager;
 
 @end

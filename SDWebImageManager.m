@@ -181,6 +181,15 @@ static SDWebImageManager *instance;
     [cacheDelegates removeObjectAtIndex:idx];
 }
 
+- (void)imageCache:(SDImageCache *)imageCache willLoadFromDiskForKey:(NSString *)key userInfo:(NSDictionary *)info 
+{
+    id<SDWebImageManagerDelegate> delegate = [info objectForKey:@"delegate"];
+    if ([delegate respondsToSelector:@selector(webImageManagerWillLoadFromDisk:)]) 
+    {
+        [delegate webImageManagerWillLoadFromDisk:self];
+    }
+}
+
 - (void)imageCache:(SDImageCache *)imageCache didNotFindImageForKey:(NSString *)key userInfo:(NSDictionary *)info
 {
     NSURL *url = [info objectForKey:@"url"];

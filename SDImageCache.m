@@ -299,6 +299,10 @@ static SDImageCache *instance;
     {
         [arguments setObject:info forKey:@"userInfo"];
     }
+    if ([delegate respondsToSelector:@selector(imageCache:willLoadFromDiskForKey:userInfo:)])
+    {
+        [delegate imageCache:self willLoadFromDiskForKey:key userInfo:info];
+    }
     [cacheOutQueue addOperation:[[[NSInvocationOperation alloc] initWithTarget:self selector:@selector(queryDiskCacheOperation:) object:arguments] autorelease]];
 }
 
