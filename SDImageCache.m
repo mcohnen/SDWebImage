@@ -11,6 +11,8 @@
 #import "SDWebImageLoadInfo.h"
 #import <CommonCrypto/CommonDigest.h>
 
+#import "SDWebImageManager.h"
+
 #ifdef ENABLE_SDWEBIMAGE_DECODER
 #import "SDWebImageDecoder.h"
 #endif
@@ -194,8 +196,7 @@ static SDImageCache *instance;
 #endif
         [mutableArguments setObject:image forKey:@"image"];
     }
-
-    [self performSelectorOnMainThread:@selector(notifyDelegate:) withObject:mutableArguments waitUntilDone:NO];
+    [self performSelectorOnMainThread:@selector(notifyDelegate:) withObject:mutableArguments waitUntilDone:YES modes:[NSArray arrayWithObject:NSRunLoopCommonModes]];
 }
 
 #pragma mark ImageCache
@@ -299,11 +300,16 @@ static SDImageCache *instance;
     {
         [arguments setObject:info forKey:@"userInfo"];
     }
-    if ([delegate respondsToSelector:@selector(imageCache:willLoadFromDiskForKey:userInfo:)])
-    {
-        [delegate imageCache:self willLoadFromDiskForKey:key userInfo:info];
+    int options = [[info objectForKey:@"options"] intValue];
+    if (options & SDWebImageCacheDiskUIThread) {
+        [self queryDiskCacheOperation:arguments];
+    } else {
+        if ([delegate respondsToSelector:@selector(imageCache:willLoadFromDiskForKey:userInfo:)])
+        {
+            [delegate imageCache:self willLoadFromDiskForKey:key userInfo:info];
+            [cacheOutQueue addOperation:[[[NSInvocationOperation alloc] initWithTarget:self selector:@selector(queryDiskCacheOperation:) object:arguments] autorelease]];
+        }
     }
-    [cacheOutQueue addOperation:[[[NSInvocationOperation alloc] initWithTarget:self selector:@selector(queryDiskCacheOperation:) object:arguments] autorelease]];
 }
 
 - (void)removeImageForKey:(NSString *)key

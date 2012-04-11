@@ -20,6 +20,7 @@ typedef enum
     SDWebImageLowPriority = 1 << 1,
     SDWebImageCacheMemoryOnly = 1 << 2,
     SDWebImageScreenScale = 1 << 3,
+    SDWebImageCacheDiskUIThread = 1 << 4,
 } SDWebImageOptions;
 
 @interface SDWebImageManager : NSObject <SDWebImageDownloaderDelegate, SDImageCacheDelegate>

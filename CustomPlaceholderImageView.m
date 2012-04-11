@@ -13,6 +13,8 @@
 
 @implementation CustomPlaceholderImageView
 
+@synthesize delayShow = _delayShow;
+
 @synthesize delegate = _delegate;
 
 - (id)initWithFrame:(CGRect)frame customPlaceholder:(UIView *)customPlaceholder {
@@ -23,7 +25,6 @@
     }
     return self;
 }
-
 
 - (void)webImageManager:(SDWebImageManager *)imageManager didFinishWithInfo:(NSDictionary *)info {
     [super webImageManager:imageManager didFinishWithInfo:info];
