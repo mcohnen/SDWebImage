@@ -285,9 +285,16 @@ static SDWebImageManager *instance;
                     [delegate performSelector:@selector(webImageManager:didFailWithError:) withObject:self withObject:nil];
                 }
             }
-
-            [downloaders removeObjectAtIndex:uidx];
-            [downloadDelegates removeObjectAtIndex:uidx];
+            // Allow threads
+            @synchronized(self.class) {
+                if (downloaders.count >= uidx-1) {
+                    [downloaders removeObjectAtIndex:uidx];
+                }
+                if (downloadDelegates.count >= uidx-1) {
+                    [downloadDelegates removeObjectAtIndex:uidx];
+                }
+            }
+            
         }
     }
 
