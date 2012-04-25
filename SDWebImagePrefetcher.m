@@ -24,7 +24,7 @@ static SDWebImagePrefetcher *instance;
 {
     if (instance == nil)
     {
-        instance = [[SDWebImagePrefetcher alloc] init];
+        instance = [[self alloc] init];
         instance.maxConcurrentDownloads = 3;
     }
 

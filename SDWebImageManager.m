@@ -265,10 +265,10 @@ static SDWebImageManager *instance;
 
             if (image)
             {
-                NSDictionary *info = [NSDictionary dictionaryWithObjectsAndKeys:
-                                      [self adjustImageForScreenScale:image options:options], @"image",
-                                      SDWebImageLoadInfoWeb, SDWebImageKeyLoadInfo,
-                                      nil];
+                NSMutableDictionary *info = [NSMutableDictionary dictionaryWithDictionary:downloader.userInfo];
+                [info setValue:[self adjustImageForScreenScale:image options:options] forKey:@"image"];
+                [info setValue:SDWebImageLoadInfoWeb forKey:SDWebImageKeyLoadInfo];
+
                 if ([delegate respondsToSelector:@selector(webImageManager:didFinishWithInfo:)])
                 {
                     [delegate performSelector:@selector(webImageManager:didFinishWithInfo:) withObject:self withObject:info];
