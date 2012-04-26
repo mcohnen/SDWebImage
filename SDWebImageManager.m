@@ -304,7 +304,8 @@ static SDWebImageManager *instance;
         [[SDImageCache sharedImageCache] storeImage:image
                                           imageData:downloader.imageData
                                              forKey:[downloader.url absoluteString]
-                                             toDisk:!(options & SDWebImageCacheMemoryOnly)];
+                                             toDisk:!(options & SDWebImageCacheMemoryOnly)
+                                              toMem:!(options & SDWebImageCacheDiskOnly)];
     }
     else if (!(options & SDWebImageRetryFailed))
     {

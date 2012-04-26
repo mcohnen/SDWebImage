@@ -21,6 +21,7 @@ typedef enum
     SDWebImageCacheMemoryOnly = 1 << 2,
     SDWebImageScreenScale = 1 << 3,
     SDWebImageCacheDiskUIThread = 1 << 4,
+    SDWebImageCacheDiskOnly = 1 << 5,
 } SDWebImageOptions;
 
 @interface SDWebImageManager : NSObject <SDWebImageDownloaderDelegate, SDImageCacheDelegate>

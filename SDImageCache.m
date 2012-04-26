@@ -201,14 +201,16 @@ static SDImageCache *instance;
 
 #pragma mark ImageCache
 
-- (void)storeImage:(UIImage *)image imageData:(NSData *)data forKey:(NSString *)key toDisk:(BOOL)toDisk
+- (void)storeImage:(UIImage *)image imageData:(NSData *)data forKey:(NSString *)key toDisk:(BOOL)toDisk toMem:(BOOL)toMem
 {
     if (!image || !key)
     {
         return;
     }
-
-    [memCache setObject:image forKey:key];
+    
+    if (toMem) {
+        [memCache setObject:image forKey:key];
+    }
 
     if (toDisk)
     {
@@ -226,6 +228,10 @@ static SDImageCache *instance;
                                                                          selector:@selector(storeKeyWithDataToDisk:)
                                                                            object:keyWithData] autorelease]];
     }
+}
+
+- (void)storeImage:(UIImage *)image imageData:(NSData *)data forKey:(NSString *)key toDisk:(BOOL)toDisk {
+    [self storeImage:image imageData:data forKey:key toDisk:toDisk toMem:YES];
 }
 
 - (void)storeImage:(UIImage *)image forKey:(NSString *)key
