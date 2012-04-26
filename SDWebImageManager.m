@@ -152,33 +152,36 @@ static SDWebImageManager *instance;
 
 - (void)imageCache:(SDImageCache *)imageCache didFindImage:(UIImage *)image forKey:(NSString *)key userInfo:(NSDictionary *)info
 {
-    id<SDWebImageManagerDelegate> delegate = [info objectForKey:@"delegate"];
+    @synchronized(self.class) {
 
-    NSUInteger idx = [cacheDelegates indexOfObjectIdenticalTo:delegate];
-    if (idx == NSNotFound)
-    {
-        // Request has since been canceled
-        return;
+        id<SDWebImageManagerDelegate> delegate = [info objectForKey:@"delegate"];
+        
+        NSUInteger idx = [cacheDelegates indexOfObjectIdenticalTo:delegate];
+        if (idx == NSNotFound)
+        {
+            // Request has since been canceled
+            return;
+        }
+        
+        [self reportProgressForDelegate:delegate progress:1];
+        
+        NSMutableDictionary *mutInfo = [NSMutableDictionary dictionaryWithDictionary:info];
+        [mutInfo setObject:[self adjustImageForScreenScale:image options:[[info objectForKey:@"options"] intValue]] forKey:@"image"];
+        
+        if ([delegate respondsToSelector:@selector(webImageManager:didFinishWithInfo:)])
+        {
+            [delegate performSelector:@selector(webImageManager:didFinishWithInfo:) withObject:self withObject:mutInfo];
+        } 
+        else if ([delegate respondsToSelector:@selector(webImageManager:didFinishWithImage:)])
+        {
+            [delegate performSelector:@selector(webImageManager:didFinishWithImage:) withObject:self withObject:image];
+        }
+        
+        // Remove one instance of delegate from the array,
+        // not all of them (as |removeObjectIdenticalTo:| would)
+        // in case multiple requests are issued.
+        [cacheDelegates removeObjectAtIndex:idx];
     }
-
-    [self reportProgressForDelegate:delegate progress:1];
-
-    NSMutableDictionary *mutInfo = [NSMutableDictionary dictionaryWithDictionary:info];
-    [mutInfo setObject:[self adjustImageForScreenScale:image options:[[info objectForKey:@"options"] intValue]] forKey:@"image"];
-
-    if ([delegate respondsToSelector:@selector(webImageManager:didFinishWithInfo:)])
-    {
-        [delegate performSelector:@selector(webImageManager:didFinishWithInfo:) withObject:self withObject:mutInfo];
-    } 
-    else if ([delegate respondsToSelector:@selector(webImageManager:didFinishWithImage:)])
-    {
-        [delegate performSelector:@selector(webImageManager:didFinishWithImage:) withObject:self withObject:image];
-    }
-
-    // Remove one instance of delegate from the array,
-    // not all of them (as |removeObjectIdenticalTo:| would)
-    // in case multiple requests are issued.
-    [cacheDelegates removeObjectAtIndex:idx];
 }
 
 - (void)imageCache:(SDImageCache *)imageCache willLoadFromDiskForKey:(NSString *)key userInfo:(NSDictionary *)info 
@@ -251,73 +254,67 @@ static SDWebImageManager *instance;
 }
 
 - (void)imageDownloader:(SDWebImageDownloader *)downloader didFinishWithImage:(UIImage *)image {
-    [downloader retain];
-    SDWebImageOptions options = [[downloader.userInfo objectForKey:@"options"] intValue];
-
-    // Notify all the downloadDelegates with this downloader
-    for (NSInteger idx = (NSInteger)[downloaders count] - 1; idx >= 0; idx--)
-    {
-        NSUInteger uidx = (NSUInteger)idx;
-        SDWebImageDownloader *aDownloader = [downloaders objectAtIndex:uidx];
-        if (aDownloader == downloader)
+    @synchronized(self.class) {
+        [downloader retain];
+        SDWebImageOptions options = [[downloader.userInfo objectForKey:@"options"] intValue];
+        
+        // Notify all the downloadDelegates with this downloader
+        for (NSInteger idx = (NSInteger)[downloaders count] - 1; idx >= 0; idx--)
         {
-            id<SDWebImageManagerDelegate> delegate = [[[downloadDelegates objectAtIndex:uidx] retain] autorelease];
-
-            if (image)
+            NSUInteger uidx = (NSUInteger)idx;
+            SDWebImageDownloader *aDownloader = [downloaders objectAtIndex:uidx];
+            if (aDownloader == downloader)
             {
-                NSMutableDictionary *info = [NSMutableDictionary dictionaryWithDictionary:downloader.userInfo];
-                [info setValue:[self adjustImageForScreenScale:image options:options] forKey:@"image"];
-                [info setValue:SDWebImageLoadInfoWeb forKey:SDWebImageKeyLoadInfo];
-
-                if ([delegate respondsToSelector:@selector(webImageManager:didFinishWithInfo:)])
+                id<SDWebImageManagerDelegate> delegate = [[[downloadDelegates objectAtIndex:uidx] retain] autorelease];
+                
+                if (image)
                 {
-                    [delegate performSelector:@selector(webImageManager:didFinishWithInfo:) withObject:self withObject:info];
-                } 
-                else if ([delegate respondsToSelector:@selector(webImageManager:didFinishWithImage:)])
+                    NSMutableDictionary *info = [NSMutableDictionary dictionaryWithDictionary:downloader.userInfo];
+                    [info setValue:[self adjustImageForScreenScale:image options:options] forKey:@"image"];
+                    [info setValue:SDWebImageLoadInfoWeb forKey:SDWebImageKeyLoadInfo];
+                    
+                    if ([delegate respondsToSelector:@selector(webImageManager:didFinishWithInfo:)])
+                    {
+                        [delegate performSelector:@selector(webImageManager:didFinishWithInfo:) withObject:self withObject:info];
+                    } 
+                    else if ([delegate respondsToSelector:@selector(webImageManager:didFinishWithImage:)])
+                    {
+                        [delegate performSelector:@selector(webImageManager:didFinishWithImage:) withObject:self withObject:image];
+                    }
+                }
+                else
                 {
-                    [delegate performSelector:@selector(webImageManager:didFinishWithImage:) withObject:self withObject:image];
+                    if ([delegate respondsToSelector:@selector(webImageManager:didFailWithError:)])
+                    {
+                        [delegate performSelector:@selector(webImageManager:didFailWithError:) withObject:self withObject:nil];
+                    }
                 }
+                [downloaders removeObjectAtIndex:uidx];
+                [downloadDelegates removeObjectAtIndex:uidx];
             }
-            else
-            {
-                if ([delegate respondsToSelector:@selector(webImageManager:didFailWithError:)])
-                {
-                    [delegate performSelector:@selector(webImageManager:didFailWithError:) withObject:self withObject:nil];
-                }
-            }
-            // Allow threads
-            @synchronized(self.class) {
-                if (downloaders.count >= uidx-1) {
-                    [downloaders removeObjectAtIndex:uidx];
-                }
-                if (downloadDelegates.count >= uidx-1) {
-                    [downloadDelegates removeObjectAtIndex:uidx];
-                }
-            }
-            
         }
+        
+        if (image)
+        {
+            // Store the image in the cache
+            [[SDImageCache sharedImageCache] storeImage:image
+                                              imageData:downloader.imageData
+                                                 forKey:[downloader.url absoluteString]
+                                                 toDisk:!(options & SDWebImageCacheMemoryOnly)
+                                                  toMem:!(options & SDWebImageCacheDiskOnly)];
+        }
+        else if (!(options & SDWebImageRetryFailed))
+        {
+            // The image can't be downloaded from this URL, mark the URL as failed so we won't try and fail again and again
+            // (do this only if SDWebImageRetryFailed isn't activated)
+            [failedURLs addObject:downloader.url];
+        }
+        
+        
+        // Release the downloader
+        [downloaderForURL removeObjectForKey:downloader.url];
+        [downloader release];
     }
-
-    if (image)
-    {
-        // Store the image in the cache
-        [[SDImageCache sharedImageCache] storeImage:image
-                                          imageData:downloader.imageData
-                                             forKey:[downloader.url absoluteString]
-                                             toDisk:!(options & SDWebImageCacheMemoryOnly)
-                                              toMem:!(options & SDWebImageCacheDiskOnly)];
-    }
-    else if (!(options & SDWebImageRetryFailed))
-    {
-        // The image can't be downloaded from this URL, mark the URL as failed so we won't try and fail again and again
-        // (do this only if SDWebImageRetryFailed isn't activated)
-        [failedURLs addObject:downloader.url];
-    }
-
-
-    // Release the downloader
-    [downloaderForURL removeObjectForKey:downloader.url];
-    [downloader release];
 }
 
 - (void)imageDownloader:(SDWebImageDownloader *)downloader didFailWithError:(NSError *)error;
