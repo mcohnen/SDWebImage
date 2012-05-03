@@ -45,22 +45,9 @@
     self.image = image;
 }
 
-+ (UIImage *)imageWithImage:(UIImage *)image scaledToSize:(CGSize)newSize {
-    //UIGraphicsBeginImageContext(newSize);
-    UIGraphicsBeginImageContextWithOptions(newSize, NO, 0.0);
-    [image drawInRect:CGRectMake(0, 0, newSize.width, newSize.height)];
-    UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();    
-    UIGraphicsEndImageContext();
-    return newImage;
-}
-
 - (void)webImageManager:(SDWebImageManager *)imageManager didFinishWithInfo:(NSDictionary *)info
 {
     self.image = [info objectForKey:@"image"];
-    if (!CGSizeEqualToSize(self.image.size, kContactLargeSize)) {
-        self.image = [self.class imageWithImage:self.image scaledToSize:kContactLargeSize];
-    }
-    
 }
 
 @end
