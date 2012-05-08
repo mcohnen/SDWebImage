@@ -10,6 +10,7 @@
 #import "SDImageCache.h"
 #import "SDWebImageDownloader.h"
 #import "SDWebImageLoadInfo.h"
+#import "SDNSURL.h"
 
 NSString *const SDWebImageManagerProgressDidUpdateNotification = @"SDWebImageManagerProgressDidUpdateNotification";
 NSString *const SDWebImageManagerProgressNotificationInfoProgressKey = @"progress";
@@ -102,7 +103,11 @@ static SDWebImageManager *instance;
     // Check the on-disk cache async so we don't block the main thread
     [cacheDelegates addObject:delegate];
     NSDictionary *info = [NSDictionary dictionaryWithObjectsAndKeys:delegate, @"delegate", url, @"url", [NSNumber numberWithInt:options], @"options", nil];
-    [[SDImageCache sharedImageCache] queryDiskCacheForKey:[url absoluteString] delegate:self userInfo:info];
+    NSString *cacheKey = [url absoluteString];
+    if ([url isKindOfClass:[SDNSURL class]]) {
+        cacheKey = [(SDNSURL *)url cacheKey];
+    }
+    [[SDImageCache sharedImageCache] queryDiskCacheForKey:cacheKey delegate:self userInfo:info];
 }
 
 - (void)cancelForDelegate:(id<SDWebImageManagerDelegate>)delegate
@@ -315,6 +320,30 @@ static SDWebImageManager *instance;
         [downloaderForURL removeObjectForKey:downloader.url];
         [downloader release];
     }
+
+    if (image)
+    {
+        NSString *cacheKey = [downloader.url absoluteString];
+        if ([downloader.url isKindOfClass:[SDNSURL class]]) {
+            cacheKey = [(SDNSURL *)downloader.url cacheKey];
+        }
+        // Store the image in the cache
+        [[SDImageCache sharedImageCache] storeImage:image
+                                          imageData:downloader.imageData
+                                             forKey:cacheKey
+                                             toDisk:!(options & SDWebImageCacheMemoryOnly)];
+    }
+    else if (!(options & SDWebImageRetryFailed))
+    {
+        // The image can't be downloaded from this URL, mark the URL as failed so we won't try and fail again and again
+        // (do this only if SDWebImageRetryFailed isn't activated)
+        [failedURLs addObject:downloader.url];
+    }
+
+
+    // Release the downloader
+    [downloaderForURL removeObjectForKey:downloader.url];
+    [downloader release];
 }
 
 - (void)imageDownloader:(SDWebImageDownloader *)downloader didFailWithError:(NSError *)error;
