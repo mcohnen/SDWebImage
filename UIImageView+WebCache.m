@@ -27,7 +27,9 @@
     // Remove in progress downloader from queue
     [manager cancelForDelegate:self];
 
-    self.image = placeholder;
+    if (!options || !(options&SDWebImageIgnorePlaceHolder)) {
+        self.image = placeholder;
+    }
 
     if (url)
     {
