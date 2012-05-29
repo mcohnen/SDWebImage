@@ -201,6 +201,7 @@ static SDWebImageManager *instance;
 - (void)imageCache:(SDImageCache *)imageCache didNotFindImageForKey:(NSString *)key userInfo:(NSDictionary *)info
 {
     NSURL *url = [info objectForKey:@"url"];
+
     id<SDWebImageManagerDelegate> delegate = [info objectForKey:@"delegate"];
     SDWebImageOptions options = [[info objectForKey:@"options"] intValue];
     
