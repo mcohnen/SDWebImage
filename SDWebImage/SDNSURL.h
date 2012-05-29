@@ -11,6 +11,7 @@
 @interface SDNSURL : NSURL
 
 @property (nonatomic, copy) NSString *cacheKey;
+@property (nonatomic, readonly) BOOL isEmptyURL;
 
 + (SDNSURL *)URLWithString:(NSString *)url cacheKey:(NSString *)cacheKey;
 

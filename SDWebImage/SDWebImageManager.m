@@ -201,9 +201,17 @@ static SDWebImageManager *instance;
 - (void)imageCache:(SDImageCache *)imageCache didNotFindImageForKey:(NSString *)key userInfo:(NSDictionary *)info
 {
     NSURL *url = [info objectForKey:@"url"];
-
+    
+    
     id<SDWebImageManagerDelegate> delegate = [info objectForKey:@"delegate"];
     SDWebImageOptions options = [[info objectForKey:@"options"] intValue];
+    
+    if ([url isKindOfClass:[SDNSURL class]] && [(SDNSURL *)url isEmptyURL]) {
+        if ([delegate respondsToSelector:@selector(webImageManager:didFailWithError:)]) {
+            [delegate performSelector:@selector(webImageManager:didFailWithError:) withObject:self withObject:nil];
+        }
+        return;
+    }
     
     // Notify delegate that we are about to download from web
     if ([delegate respondsToSelector:@selector(webImageManagerWillStartDownload:)]) {

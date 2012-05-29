@@ -12,10 +12,19 @@
 
 @synthesize cacheKey = _cacheKey;
 
+NSString * const empty = @"empty";
+
 + (SDNSURL *)URLWithString:(NSString *)url cacheKey:(NSString *)cacheKey {
+    if (!url) {
+        url = empty;
+    }
     SDNSURL *ret = [SDNSURL URLWithString:url];
     ret.cacheKey = cacheKey;
     return ret;
+}
+
+- (BOOL)isEmptyURL {
+    return [self.absoluteString isEqualToString:empty];
 }
 
 - (void)dealloc {
