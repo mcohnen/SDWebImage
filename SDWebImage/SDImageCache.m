@@ -244,6 +244,25 @@ static SDImageCache *instance;
     [self storeImage:image imageData:nil forKey:key toDisk:toDisk];
 }
 
+- (BOOL)hasImageFromKey:(NSString *)key fromDisk:(BOOL)fromDisk 
+{
+    if (key == nil)
+    {
+        return nil;
+    }
+    
+    if ([memCache objectForKey:key]) 
+    {
+        return YES;
+    }
+    
+    if (fromDisk && [[NSFileManager defaultManager] fileExistsAtPath:[self cachePathForKey:key]]) 
+    {
+        return YES;
+    }
+    
+    return NO;
+}
 
 - (UIImage *)imageFromKey:(NSString *)key
 {

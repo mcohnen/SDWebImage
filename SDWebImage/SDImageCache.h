@@ -30,4 +30,6 @@
 - (void)clearDisk;
 - (void)cleanDisk;
 
+- (BOOL)hasImageFromKey:(NSString *)key fromDisk:(BOOL)fromDisk;
+
 @end
