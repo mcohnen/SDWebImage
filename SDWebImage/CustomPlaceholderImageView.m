@@ -40,6 +40,11 @@
     }
 }
 
+- (void)webImageManagerWillLoadFromDisk:(SDWebImageManager *)manager {
+    _customPlaceholder.hidden = NO;
+    _customPlaceholder.alpha = 1;
+}
+
 - (void)webImageManager:(SDWebImageManager *)imageManager didFailWithError:(NSError *)error {
     _customPlaceholder.hidden = YES;
 }
