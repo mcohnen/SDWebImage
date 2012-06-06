@@ -13,10 +13,7 @@
 #import "SDCacheOperation.h"
 
 #import "SDWebImageManager.h"
-
-#ifdef ENABLE_SDWEBIMAGE_DECODER
 #import "SDWebImageDecoder.h"
-#endif
 
 static NSInteger cacheMaxCacheAge = 60*60*24*7; // 1 week
 
@@ -212,13 +209,11 @@ static SDImageCache *instance;
     UIImage *image = [[[UIImage alloc] initWithContentsOfFile:[self cachePathForKey:key]] autorelease];
     if (image)
     {
-#ifdef ENABLE_SDWEBIMAGE_DECODER
         UIImage *decodedImage = [UIImage decodedImageWithImage:image];
         if (decodedImage)
         {
             image = decodedImage;
         }
-#endif
         [mutableArguments setObject:image forKey:@"image"];
     }
     [self performSelectorOnMainThread:@selector(notifyDelegate:) withObject:mutableArguments waitUntilDone:YES modes:[NSArray arrayWithObject:NSRunLoopCommonModes]];
