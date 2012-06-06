@@ -10,6 +10,7 @@
 #import "SDWebImageDecoder.h"
 #import "SDWebImageLoadInfo.h"
 #import <CommonCrypto/CommonDigest.h>
+#import "SDCacheOperation.h"
 
 #import "SDWebImageManager.h"
 
@@ -49,6 +50,8 @@ static SDImageCache *instance;
         cacheInQueue.maxConcurrentOperationCount = 1;
         cacheOutQueue = [[NSOperationQueue alloc] init];
         cacheOutQueue.maxConcurrentOperationCount = 1;
+        
+        [cacheOutQueue addObserver:self forKeyPath:@"operations" options:0 context:NULL];
 
 #if TARGET_OS_IPHONE
         // Subscribe to app events
@@ -77,6 +80,14 @@ static SDImageCache *instance;
     }
 
     return self;
+}
+
+- (void) observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object 
+                         change:(NSDictionary *)change context:(void *)context
+{
+    if (object == cacheOutQueue && [keyPath isEqualToString:@"operations"]) {
+        NSLog(@"Num Ops:%d", cacheOutQueue.operations.count);
+    }
 }
 
 - (void)dealloc
@@ -154,6 +165,14 @@ static SDImageCache *instance;
     return ret;
 }
 
+- (void)cancelForDelegate:(id)delegate {
+    for (SDCacheOperation *op in cacheOutQueue.operations) {
+        if (op.delegate == delegate) {
+            [op cancel];
+        }
+    }
+}
+
 - (void)notifyDelegate:(NSDictionary *)arguments
 {
     NSString *key = [arguments objectForKey:@"key"];
@@ -183,6 +202,12 @@ static SDImageCache *instance;
 {
     NSString *key = [arguments objectForKey:@"key"];
     NSMutableDictionary *mutableArguments = [[arguments mutableCopy] autorelease];
+    
+    SDCacheOperation *op = [arguments objectForKey:@"operation"];
+    if (op.isCancelled) {
+        [self performSelectorOnMainThread:@selector(notifyDelegate:) withObject:mutableArguments waitUntilDone:YES modes:[NSArray arrayWithObject:NSRunLoopCommonModes]];
+        return;
+    }
 
     UIImage *image = [[[UIImage alloc] initWithContentsOfFile:[self cachePathForKey:key]] autorelease];
     if (image)
@@ -332,7 +357,10 @@ static SDImageCache *instance;
         if ([delegate respondsToSelector:@selector(imageCache:willLoadFromDiskForKey:userInfo:)])
         {
             [delegate imageCache:self willLoadFromDiskForKey:key userInfo:info];
-            [cacheOutQueue addOperation:[[[NSInvocationOperation alloc] initWithTarget:self selector:@selector(queryDiskCacheOperation:) object:arguments] autorelease]];
+            SDCacheOperation *op = [[[SDCacheOperation alloc] initWithTarget:self selector:@selector(queryDiskCacheOperation:) object:arguments] autorelease];
+            [arguments setValue:op forKey:@"operation"];
+            op.userInfo = info;
+            [cacheOutQueue addOperation:op];
         }
     }
 }

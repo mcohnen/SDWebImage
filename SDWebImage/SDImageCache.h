@@ -31,5 +31,6 @@
 - (void)cleanDisk;
 
 - (BOOL)hasImageFromKey:(NSString *)key fromDisk:(BOOL)fromDisk;
+- (void)cancelForDelegate:(id)delegate;
 
 @end

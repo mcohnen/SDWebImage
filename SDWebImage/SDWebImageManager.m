@@ -116,6 +116,8 @@ static SDWebImageManager *instance;
     // (removeObjectIdenticalTo: does this, despite its singular name.)
     [cacheDelegates removeObjectIdenticalTo:delegate];
 
+    [[SDImageCache sharedImageCache] cancelForDelegate:delegate];
+    
     NSUInteger idx;
     while ((idx = [downloadDelegates indexOfObjectIdenticalTo:delegate]) != NSNotFound)
     {
