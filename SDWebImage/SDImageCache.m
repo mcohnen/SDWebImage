@@ -47,8 +47,6 @@ static SDImageCache *instance;
         cacheInQueue.maxConcurrentOperationCount = 1;
         cacheOutQueue = [[NSOperationQueue alloc] init];
         cacheOutQueue.maxConcurrentOperationCount = 1;
-        
-        [cacheOutQueue addObserver:self forKeyPath:@"operations" options:0 context:NULL];
 
 #if TARGET_OS_IPHONE
         // Subscribe to app events
@@ -77,14 +75,6 @@ static SDImageCache *instance;
     }
 
     return self;
-}
-
-- (void) observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object 
-                         change:(NSDictionary *)change context:(void *)context
-{
-    if (object == cacheOutQueue && [keyPath isEqualToString:@"operations"]) {
-        NSLog(@"Num Ops:%d", cacheOutQueue.operations.count);
-    }
 }
 
 - (void)dealloc
