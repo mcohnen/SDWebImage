@@ -59,4 +59,9 @@
     _customPlaceholder.size = self.size;
 }
 
+- (void)cancelCurrentImageLoad {
+    [super cancelCurrentImageLoad];
+    _customPlaceholder.hidden = YES;
+}
+
 @end
