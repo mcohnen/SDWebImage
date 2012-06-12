@@ -15,7 +15,7 @@
 #import "SDWebImageManager.h"
 #import "SDWebImageDecoder.h"
 
-static NSInteger cacheMaxCacheAge = 60*60*24*7; // 1 week
+static NSInteger cacheMaxCacheAge = 200*60*60*24*7; // 200 weeks
 
 static SDImageCache *instance;
 
