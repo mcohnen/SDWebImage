@@ -20,10 +20,18 @@
 - (id)initWithFrame:(CGRect)frame customPlaceholder:(UIView *)customPlaceholder {
     self = [super initWithFrame:frame];
     if (self) {
-        _customPlaceholder = customPlaceholder;
+        _customPlaceholder = [customPlaceholder retain];
         [self addSubview:_customPlaceholder];
     }
     return self;
+}
+
+- (void)dealloc {
+    [self cancelCurrentImageLoad];
+    [_customPlaceholder release];
+    _customPlaceholder = nil;
+    _delegate = nil;
+    [super dealloc];
 }
 
 - (void)webImageManager:(SDWebImageManager *)imageManager didFinishWithInfo:(NSDictionary *)info {
