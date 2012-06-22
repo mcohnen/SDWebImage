@@ -101,6 +101,7 @@ NSString *const SDWebImageDownloadStopNotification = @"SDWebImageDownloadStopNot
         self.connection = nil;
         [[NSNotificationCenter defaultCenter] postNotificationName:SDWebImageDownloadStopNotification object:nil];
     }
+    delegate = nil;
 }
 
 #pragma mark NSURLConnection (delegate)
