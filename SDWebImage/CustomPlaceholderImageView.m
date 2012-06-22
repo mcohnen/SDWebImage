@@ -40,7 +40,7 @@
     [UIView animateWithDuration:0.3 delay:0 options:UIViewAnimationOptionAllowUserInteraction animations:^{
         _customPlaceholder.alpha = 0;
     } completion:^(BOOL finished) {
-        _customPlaceholder.hidden = YES;
+//        _customPlaceholder.hidden = YES;
     }];
     
     if ([_delegate respondsToSelector:@selector(image:didFinishWithInfo:)]) {
@@ -69,7 +69,7 @@
 
 - (void)cancelCurrentImageLoad {
     [super cancelCurrentImageLoad];
-    _customPlaceholder.hidden = YES;
+//    _customPlaceholder.hidden = YES;
 }
 
 @end
