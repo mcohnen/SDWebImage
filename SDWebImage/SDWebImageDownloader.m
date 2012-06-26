@@ -56,7 +56,7 @@ NSString *const SDWebImageDownloadStopNotification = @"SDWebImageDownloadStopNot
     downloader.delegate = delegate;
     downloader.userInfo = userInfo;
     downloader.lowPriority = lowPriority;
-    [downloader performSelectorOnMainThread:@selector(start) withObject:nil waitUntilDone:YES];
+    [downloader performSelectorOnMainThread:@selector(start) withObject:nil waitUntilDone:NO];
     return downloader;
 }
 
