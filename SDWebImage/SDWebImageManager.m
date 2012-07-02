@@ -202,6 +202,10 @@ static SDWebImageManager *instance;
 
 - (void)imageCache:(SDImageCache *)imageCache didNotFindImageForKey:(NSString *)key userInfo:(NSDictionary *)info
 {
+    if ([[info objectForKey:@"cacheCanceled"] boolValue]) {
+        // Do nothing if cache Canceled to prevent crash
+        return;
+    }
     NSURL *url = [info objectForKey:@"url"];
     
     

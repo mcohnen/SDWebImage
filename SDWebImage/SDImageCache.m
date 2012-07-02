@@ -192,6 +192,7 @@ static SDImageCache *instance;
     
     SDCacheOperation *op = [arguments objectForKey:@"operation"];
     if (op.isCancelled) {
+        [mutableArguments setValue:[NSNumber numberWithBool:YES] forKey:@"diskCanceled"];
         [self performSelectorOnMainThread:@selector(notifyDelegate:) withObject:mutableArguments waitUntilDone:NO modes:[NSArray arrayWithObject:NSRunLoopCommonModes]];
         return;
     }
