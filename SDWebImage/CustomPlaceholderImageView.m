@@ -40,7 +40,6 @@
     [UIView animateWithDuration:0.3 delay:0 options:UIViewAnimationOptionAllowUserInteraction animations:^{
         _customPlaceholder.alpha = 0;
     } completion:^(BOOL finished) {
-//        _customPlaceholder.hidden = YES;
     }];
     
     if ([_delegate respondsToSelector:@selector(image:didFinishWithInfo:)]) {
@@ -49,16 +48,14 @@
 }
 
 - (void)webImageManagerWillLoadFromDisk:(SDWebImageManager *)manager {
-    _customPlaceholder.hidden = NO;
     _customPlaceholder.alpha = 1;
 }
 
 - (void)webImageManager:(SDWebImageManager *)imageManager didFailWithError:(NSError *)error {
-    _customPlaceholder.hidden = YES;
+    _customPlaceholder.alpha = 0;
 }
 
 - (void)webImageManagerWillStartDownload:(SDWebImageManager *)imageManager {
-    _customPlaceholder.hidden = NO;
     _customPlaceholder.alpha = 1;
 }
 
@@ -69,7 +66,7 @@
 
 - (void)cancelCurrentImageLoad {
     [super cancelCurrentImageLoad];
-//    _customPlaceholder.hidden = YES;
+    _customPlaceholder.alpha = 0;;
 }
 
 @end
