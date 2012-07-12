@@ -15,8 +15,6 @@
 
 @synthesize delayShow = _delayShow;
 
-@synthesize delegate = _delegate;
-
 - (id)initWithFrame:(CGRect)frame customPlaceholder:(UIView *)customPlaceholder {
     self = [super initWithFrame:frame];
     if (self) {
@@ -30,7 +28,6 @@
     [self cancelCurrentImageLoad];
     [_customPlaceholder release];
     _customPlaceholder = nil;
-    _delegate = nil;
     [super dealloc];
 }
 
@@ -41,10 +38,6 @@
         _customPlaceholder.alpha = 0;
     } completion:^(BOOL finished) {
     }];
-    
-    if ([_delegate respondsToSelector:@selector(image:didFinishWithInfo:)]) {
-        [_delegate performSelector:@selector(image:didFinishWithInfo:) withObject:self withObject:info];
-    }
 }
 
 - (void)webImageManagerWillLoadFromDisk:(SDWebImageManager *)manager {

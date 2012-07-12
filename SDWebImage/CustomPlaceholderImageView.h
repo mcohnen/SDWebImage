@@ -10,12 +10,10 @@
 #import "UIImageView+WebCache.h"
 
 @interface CustomPlaceholderImageView : UIImageView {
-    id _delegate;
     UIView *_customPlaceholder;
     BOOL _delayShow;
 }
 
-@property (nonatomic, assign) id delegate;
 @property (nonatomic, assign) BOOL delayShow;
 
 - (id)initWithFrame:(CGRect)frame customPlaceholder:(UIView *)customPlaceholder;

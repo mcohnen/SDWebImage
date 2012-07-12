@@ -340,14 +340,13 @@ static SDImageCache *instance;
     if (options & SDWebImageCacheDiskUIThread) {
         [self queryDiskCacheOperation:arguments];
     } else {
-        if ([delegate respondsToSelector:@selector(imageCache:willLoadFromDiskForKey:userInfo:)])
-        {
+        if ([delegate respondsToSelector:@selector(imageCache:willLoadFromDiskForKey:userInfo:)]) {
             [delegate imageCache:self willLoadFromDiskForKey:key userInfo:info];
-            SDCacheOperation *op = [[[SDCacheOperation alloc] initWithTarget:self selector:@selector(queryDiskCacheOperation:) object:arguments] autorelease];
-            [arguments setValue:op forKey:@"operation"];
-            op.userInfo = info;
-            [cacheOutQueue addOperation:op];
         }
+        SDCacheOperation *op = [[[SDCacheOperation alloc] initWithTarget:self selector:@selector(queryDiskCacheOperation:) object:arguments] autorelease];
+        [arguments setValue:op forKey:@"operation"];
+        op.userInfo = info;
+        [cacheOutQueue addOperation:op];
     }
 }
 
