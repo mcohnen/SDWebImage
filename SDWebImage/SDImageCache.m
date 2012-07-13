@@ -259,7 +259,7 @@ static SDImageCache *instance;
 {
     if (key == nil)
     {
-        return nil;
+        return NO;
     }
     
     if ([memCache objectForKey:key]) 
