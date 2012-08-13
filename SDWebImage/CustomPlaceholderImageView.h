@@ -15,6 +15,7 @@
 }
 
 @property (nonatomic, assign) BOOL delayShow;
+@property (nonatomic, readonly) UIView *customPlaceholder;
 
 - (id)initWithFrame:(CGRect)frame customPlaceholder:(UIView *)customPlaceholder;
 - (void)webImageManager:(SDWebImageManager *)imageManager didFinishWithInfo:(NSDictionary *)info;

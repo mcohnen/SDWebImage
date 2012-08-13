@@ -14,6 +14,7 @@
 @implementation CustomPlaceholderImageView
 
 @synthesize delayShow = _delayShow;
+@synthesize customPlaceholder = _customPlaceholder;
 
 - (id)initWithFrame:(CGRect)frame customPlaceholder:(UIView *)customPlaceholder {
     self = [super initWithFrame:frame];
