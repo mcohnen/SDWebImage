@@ -7,6 +7,7 @@
  */
 
 #import "SDWebImageDownloader.h"
+#import "EventTrackHandler.h"
 
 #import "SDWebImageDecoder.h"
 @interface SDWebImageDownloader (ImageDecoder) <SDWebImageDecoderDelegate>
@@ -22,6 +23,7 @@ NSString *const SDWebImageDownloadStopNotification = @"SDWebImageDownloadStopNot
 @implementation SDWebImageDownloader
 @synthesize url, delegate, connection, imageData, userInfo, lowPriority;
 @synthesize expectedContentLength, totalReceivedLength;
+@synthesize startDate;
 
 #pragma mark Public Methods
 
@@ -76,6 +78,7 @@ NSString *const SDWebImageDownloadStopNotification = @"SDWebImageDownloadStopNot
     {
         [connection scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
     }
+    self.startDate = [NSDate date];
     [connection start];
     [request release];
 
@@ -120,6 +123,12 @@ NSString *const SDWebImageDownloadStopNotification = @"SDWebImageDownloadStopNot
 - (void)connectionDidFinishLoading:(NSURLConnection *)aConnection
 {
     self.connection = nil;
+    
+    if (self.startDate) {
+        NSString *label = [NSString stringWithFormat:@"%@", self.url];
+        NSTimeInterval time = -1*[self.startDate timeIntervalSinceNow];
+        [[EventTrackHandler sharedInstance] trackImageDownloadAction:@"singleImage-Success" label:label time:time];
+    }
 
     [[NSNotificationCenter defaultCenter] postNotificationName:SDWebImageDownloadStopNotification object:nil];
 
@@ -141,6 +150,12 @@ NSString *const SDWebImageDownloadStopNotification = @"SDWebImageDownloadStopNot
 {
     [[NSNotificationCenter defaultCenter] postNotificationName:SDWebImageDownloadStopNotification object:nil];
 
+    if (self.startDate) {
+        NSString *label = [NSString stringWithFormat:@"%@ - ", self.url, error];
+        NSTimeInterval time = -1*[self.startDate timeIntervalSinceNow];
+        [[EventTrackHandler sharedInstance] trackImageDownloadAction:@"singleImage-Fail" label:label time:time];
+    }
+    
     if ([delegate respondsToSelector:@selector(imageDownloader:didFailWithError:)])
     {
         [delegate performSelector:@selector(imageDownloader:didFailWithError:) withObject:self withObject:error];
@@ -170,6 +185,7 @@ NSString *const SDWebImageDownloadStopNotification = @"SDWebImageDownloadStopNot
     [connection release], connection = nil;
     [imageData release], imageData = nil;
     [userInfo release], userInfo = nil;
+    [startDate release], startDate = nil;
     [super dealloc];
 }
 

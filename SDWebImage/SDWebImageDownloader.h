@@ -35,6 +35,8 @@ extern NSString *const SDWebImageDownloadStopNotification;
 @property (readwrite) float expectedContentLength;
 @property (readwrite) float totalReceivedLength;
 
+@property (nonatomic, retain) NSDate *startDate;
+
 + (id)downloaderWithURL:(NSURL *)url delegate:(id<SDWebImageDownloaderDelegate>)delegate userInfo:(id)userInfo lowPriority:(BOOL)lowPriority;
 + (id)downloaderWithURL:(NSURL *)url delegate:(id<SDWebImageDownloaderDelegate>)delegate userInfo:(id)userInfo;
 + (id)downloaderWithURL:(NSURL *)url delegate:(id<SDWebImageDownloaderDelegate>)delegate;
