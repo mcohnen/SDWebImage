@@ -11,6 +11,7 @@
 #import "SDWebImageDownloader.h"
 #import "SDWebImageLoadInfo.h"
 #import "SDNSURL.h"
+#import "EventTrackHandler.h"
 
 NSString *const SDWebImageManagerProgressDidUpdateNotification = @"SDWebImageManagerProgressDidUpdateNotification";
 NSString *const SDWebImageManagerProgressNotificationInfoProgressKey = @"progress";

@@ -7,9 +7,11 @@
  */
 
 #import "SDWebImageDownloader.h"
-#import "EventTrackHandler.h"
-
 #import "SDWebImageDecoder.h"
+#import "EventTrackHandler.h"
+#import "MultipartRelatedItem.h"
+#import "UserHandler.h"
+
 @interface SDWebImageDownloader (ImageDecoder) <SDWebImageDecoderDelegate>
 @end
 
@@ -23,7 +25,9 @@ NSString *const SDWebImageDownloadStopNotification = @"SDWebImageDownloadStopNot
 @implementation SDWebImageDownloader
 @synthesize url, delegate, connection, imageData, userInfo, lowPriority;
 @synthesize expectedContentLength, totalReceivedLength;
-@synthesize startDate;
+
+@synthesize downloadStart = _downloadStart;
+@synthesize downloadTime = _downloadTime;
 
 #pragma mark Public Methods
 
@@ -78,7 +82,7 @@ NSString *const SDWebImageDownloadStopNotification = @"SDWebImageDownloadStopNot
     {
         [connection scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
     }
-    self.startDate = [NSDate date];
+    self.downloadStart = [NSDate date];
     [connection start];
     [request release];
 
@@ -124,11 +128,7 @@ NSString *const SDWebImageDownloadStopNotification = @"SDWebImageDownloadStopNot
 {
     self.connection = nil;
     
-    if (self.startDate) {
-        NSString *label = [NSString stringWithFormat:@"%@", self.url];
-        NSTimeInterval time = -1*[self.startDate timeIntervalSinceNow];
-        [[EventTrackHandler sharedInstance] trackImageDownloadAction:@"singleImage-Success" label:label time:time];
-    }
+    [self updateDownloadTime];
 
     [[NSNotificationCenter defaultCenter] postNotificationName:SDWebImageDownloadStopNotification object:nil];
 
@@ -146,15 +146,20 @@ NSString *const SDWebImageDownloadStopNotification = @"SDWebImageDownloadStopNot
     }
 }
 
+- (void)updateDownloadTime {
+    _downloadTime = -1*[self.downloadStart timeIntervalSinceNow];
+    if ([EventTrackHandler sharedInstance].sendPhotoDownloadInfo) {
+        
+    }
+    NSDictionary *headers = [NSDictionary dictionaryWithObjectsAndKeys:self.url.absoluteString, @"Content-Description", nil];
+    MultiPartRelatedItem *item = [MultiPartRelatedItem itemWithHeaders:headers data:self.imageData downloadTime:_downloadTime];
+    [[EventTrackHandler sharedInstance] trackImageDownloadAction:@"individual" label:[item descriptionWithAction:@"individual"] time:self.downloadTime];
+}
+
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
 {
+    [self updateDownloadTime];
     [[NSNotificationCenter defaultCenter] postNotificationName:SDWebImageDownloadStopNotification object:nil];
-
-    if (self.startDate) {
-        NSString *label = [NSString stringWithFormat:@"%@ - ", self.url, error];
-        NSTimeInterval time = -1*[self.startDate timeIntervalSinceNow];
-        [[EventTrackHandler sharedInstance] trackImageDownloadAction:@"singleImage-Fail" label:label time:time];
-    }
     
     if ([delegate respondsToSelector:@selector(imageDownloader:didFailWithError:)])
     {
@@ -185,7 +190,7 @@ NSString *const SDWebImageDownloadStopNotification = @"SDWebImageDownloadStopNot
     [connection release], connection = nil;
     [imageData release], imageData = nil;
     [userInfo release], userInfo = nil;
-    [startDate release], startDate = nil;
+    [_downloadStart release];
     [super dealloc];
 }
 

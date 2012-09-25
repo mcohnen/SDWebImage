@@ -34,6 +34,8 @@ extern NSString *const SDWebImageDownloadStopNotification;
 @property (nonatomic, readwrite) BOOL lowPriority;
 @property (readwrite) float expectedContentLength;
 @property (readwrite) float totalReceivedLength;
+@property (nonatomic, retain) NSDate *downloadStart;
+@property (nonatomic, assign) NSTimeInterval downloadTime;
 
 @property (nonatomic, retain) NSDate *startDate;
 
