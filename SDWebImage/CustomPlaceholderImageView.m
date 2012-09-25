@@ -19,10 +19,16 @@
 - (id)initWithFrame:(CGRect)frame customPlaceholder:(UIView *)customPlaceholder {
     self = [super initWithFrame:frame];
     if (self) {
-        _customPlaceholder = [customPlaceholder retain];
-        [self addSubview:_customPlaceholder];
+        self.customPlaceholder = customPlaceholder;
     }
     return self;
+}
+
+- (void)setCustomPlaceholder:(UIView *)customPlaceholder {
+    [_customPlaceholder removeFromSuperview];
+    [_customPlaceholder release];
+    _customPlaceholder = [customPlaceholder retain];
+    [self addSubview:_customPlaceholder];
 }
 
 - (void)dealloc {
