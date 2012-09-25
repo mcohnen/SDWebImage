@@ -153,7 +153,7 @@ NSString *const SDWebImageDownloadStopNotification = @"SDWebImageDownloadStopNot
     }
     NSDictionary *headers = [NSDictionary dictionaryWithObjectsAndKeys:self.url.absoluteString, @"Content-Description", nil];
     MultiPartRelatedItem *item = [MultiPartRelatedItem itemWithHeaders:headers data:self.imageData downloadTime:_downloadTime];
-    [[EventTrackHandler sharedInstance] trackImageDownloadAction:@"individual" label:[item descriptionWithAction:@"individual"] time:self.downloadTime];
+    [[EventTrackHandler sharedInstance] trackImageDownloadAction:@"individual" label:[item description] time:self.downloadTime];
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
