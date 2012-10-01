@@ -128,7 +128,7 @@ NSString *const SDWebImageDownloadStopNotification = @"SDWebImageDownloadStopNot
 {
     self.connection = nil;
     
-    [self updateDownloadTime];
+    [self updateDownloadTime:nil];
 
     [[NSNotificationCenter defaultCenter] postNotificationName:SDWebImageDownloadStopNotification object:nil];
 
@@ -146,19 +146,21 @@ NSString *const SDWebImageDownloadStopNotification = @"SDWebImageDownloadStopNot
     }
 }
 
-- (void)updateDownloadTime {
+- (void)updateDownloadTime:(NSError *)error {
     _downloadTime = -1*[self.downloadStart timeIntervalSinceNow];
     if ([EventTrackHandler sharedInstance].sendPhotoDownloadInfo) {
         
     }
-    NSDictionary *headers = [NSDictionary dictionaryWithObjectsAndKeys:self.url.absoluteString, @"Content-Description", nil];
+    NSDictionary *headers = [NSDictionary dictionaryWithObjectsAndKeys:
+                             self.url.absoluteString, @"Content-Description",
+                             error.description, @"X-Application-Response-Error", nil];
     MultiPartRelatedItem *item = [MultiPartRelatedItem itemWithHeaders:headers data:self.imageData downloadTime:_downloadTime];
-    [[EventTrackHandler sharedInstance] trackImageDownloadAction:@"individual" label:[item description] time:self.downloadTime];
+    [[EventTrackHandler sharedInstance] trackImageDownloadAction:error?@"individual_fail":@"individual" label:[item description] time:self.downloadTime];
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
 {
-    [self updateDownloadTime];
+    [self updateDownloadTime:error];
     [[NSNotificationCenter defaultCenter] postNotificationName:SDWebImageDownloadStopNotification object:nil];
     
     if ([delegate respondsToSelector:@selector(imageDownloader:didFailWithError:)])
