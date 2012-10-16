@@ -280,6 +280,28 @@ static SDImageCache *instance;
     return [self imageFromKey:key fromDisk:YES];
 }
 
+- (void)bringToMem:(NSString *)key decode:(BOOL)decode
+{
+    if (key == nil)
+    {
+        return;
+    }
+    
+    UIImage *image = [memCache objectForKey:key];
+    
+    if (!image)
+    {
+        image = [[[UIImage alloc] initWithContentsOfFile:[self cachePathForKey:key]] autorelease];
+        if (image)
+        {
+            if (decode) {
+                image = [UIImage decodedImageWithImage:image];
+            }
+            [memCache setObject:image forKey:key];
+        }
+    }
+}
+
 - (UIImage *)imageFromKey:(NSString *)key fromDisk:(BOOL)fromDisk
 {
     if (key == nil)

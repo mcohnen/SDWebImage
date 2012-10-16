@@ -32,5 +32,6 @@
 
 - (BOOL)hasImageFromKey:(NSString *)key fromDisk:(BOOL)fromDisk;
 - (void)cancelForDelegate:(id)delegate;
+- (void)bringToMem:(NSString *)key decode:(BOOL)decode;
 
 @end
