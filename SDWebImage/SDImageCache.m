@@ -207,7 +207,11 @@ static SDImageCache *instance;
         }
         [mutableArguments setObject:image forKey:@"image"];
     }
-    [self performSelectorOnMainThread:@selector(notifyDelegate:) withObject:mutableArguments waitUntilDone:NO modes:[NSArray arrayWithObject:NSRunLoopCommonModes]];
+    if ([NSThread isMainThread]) {
+        [self notifyDelegate:mutableArguments];
+    } else {
+        [self performSelectorOnMainThread:@selector(notifyDelegate:) withObject:mutableArguments waitUntilDone:NO modes:[NSArray arrayWithObject:NSRunLoopCommonModes]];
+    }
 }
 
 #pragma mark ImageCache
